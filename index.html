@@ -28,10 +28,9 @@ function render(){sel=new Set();answered=false;
  const x=list[idx];let h=`<div class="muted">${x.t} · 第 ${idx+1}/${list.length} 题</div><h3>${x.q}</h3>`;
  if(x.t=='单选题'||x.t=='多选题')h+=x.o.map((o,i)=>`<div class="opt" id="o${i}" onclick="pick(${i})">${String.fromCharCode(65+i)}. ${o}</div>`).join('');
  else if(x.t=='判断题')h+=['√','×'].map((o,i)=>`<div class="opt" id="o${i}" onclick="pick(${i})">${o=='√'?'正确 √':'错误 ×'}</div>`).join('');
- else if(x.t=='填空题')h+=`<input type="text" id="inp" placeholder="输入答案后提交">`;
  else h+=`<textarea id="inp" rows="5" placeholder="可以先写下你的答案，再查看参考答案"></textarea>`;
- h+=`<div id="res"></div><div style="margin-top:12px"><button class="sec" onclick="go(-1)">上一题</button><button onclick="submit()">${x.t=='简答题'?'看答案':'提交'}</button><button class="sec" onclick="go(1)">下一题</button></div>`;
- el.innerHTML=h;const i=document.getElementById('inp');if(i)i.onkeydown=e=>{if(e.key=='Enter'&&x.t=='填空题')submit()}}
+ h+=`<div id="res"></div><div style="margin-top:12px"><button class="sec" onclick="go(-1)">上一题</button><button onclick="submit()">${(x.t=='简答题'||x.t=='填空题')?'看答案':'提交'}</button><button class="sec" onclick="go(1)">下一题</button></div>`;
+ el.innerHTML=h;const i=document.getElementById('inp');}
 function pick(i){if(answered)return;const x=list[idx];if(x.t=='多选题'){sel.has(i)?sel.delete(i):sel.add(i)}else{sel=new Set([i])}
  document.querySelectorAll('.opt').forEach((e,j)=>e.classList.toggle('sel',sel.has(j)));if(x.t!='多选题')submit()}
 function mark(x,ok){st.done[x.id]=1;if(ok)delete st.w[x.id];else st.w[x.id]=1;save()}
@@ -39,7 +38,6 @@ function submit(){if(answered){go(1);return}const x=list[idx],res=document.getEl
  if(x.t=='单选题'||x.t=='多选题'){if(!sel.size)return;const c=letters(x);ans=c.join('');
   ok=c.length==sel.size&&c.every(l=>sel.has(l.charCodeAt(0)-65));x.o.forEach((_,j)=>{const e=document.getElementById('o'+j),r=c.includes(String.fromCharCode(65+j));if(r)e.classList.add('ok');else if(sel.has(j))e.classList.add('bad')})}
  else if(x.t=='判断题'){if(!sel.size)return;ans=x.a;const c=x.a.includes('√')?0:1;ok=sel.has(c);document.getElementById('o'+c).classList.add('ok');if(!ok)document.getElementById('o'+(1-c)).classList.add('bad')}
- else if(x.t=='填空题'){const v=inp.value.replace(/\s/g,'').toLowerCase();if(!v)return;ans=x.a;ok=x.a.replace(/\s/g,'').toLowerCase().split(/[;；、]|或/).some(a=>a==v)||x.a.replace(/\s/g,'').toLowerCase()==v}
  else{answered=true;res.innerHTML=`<div class="res n">参考答案：\n${x.a}</div><button onclick="mark(list[idx],true);go(1)">我答对了</button><button class="sec" onclick="mark(list[idx],false);go(1)">没答好，加入错题本</button>`;return}
  answered=true;mark(x,ok);res.innerHTML=`<div class="res ${ok?'g':'r'}">${ok?'✅ 回答正确':'❌ 回答错误'}，正确答案：${ans}</div>`}
 function go(d){if(!list.length)return;idx=(idx+d+list.length)%list.length;render()}
